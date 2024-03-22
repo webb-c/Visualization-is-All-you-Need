@@ -1,2 +1,7 @@
-data/
 __pycache__/
+
+data/
+result/
+
+LRLO.ipynb
+lrlo.py
