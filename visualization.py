@@ -29,7 +29,7 @@ def make_barcode(skip_list, num_frame, color='red', fps=30, save=False, save_pat
             squares[idx + i] = 0
         idx += 30
 
-    plt.figure(figsize=(num_frame / 20, 7))
+    plt.figure(figsize=(num_frame / 30, 7))
     for i in range(num_frame):
         if squares[i] == 1:
             plt.bar(i, 1, color=color)
@@ -44,7 +44,7 @@ def make_barcode(skip_list, num_frame, color='red', fps=30, save=False, save_pat
     plt.show()
 
 
-def plot_dataframe(df, xlabel='step', ylabel='value', title=None, color=None, figsize=(8, 6), save_path=None, save=False):
+def plot_dataframe(df, xlabel='step', ylabel='value', title=None, color=None, figsize=(8, 6), save_path=None, save=False, ylim=None):
     """Plot each column of the given DataFrame
     
     Args:
@@ -55,8 +55,10 @@ def plot_dataframe(df, xlabel='step', ylabel='value', title=None, color=None, fi
         save (bool, optional): save option
     """
     plt.figure(figsize=figsize)
+    is_one = 0
     
     for i, col in enumerate(df.columns):
+        is_one += 1
         if color:
             plt.plot(df.index, df[col], label=col, color=color[i % len(color)])
         else:
@@ -64,7 +66,11 @@ def plot_dataframe(df, xlabel='step', ylabel='value', title=None, color=None, fi
     
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
-    plt.legend()
+    
+    if ylim is not None:
+        plt.ylim(ylim)
+    if is_one > 1:
+        plt.legend(loc='upper right')
     if title is not None:
         plt.title(title)
     
@@ -76,7 +82,7 @@ def plot_dataframe(df, xlabel='step', ylabel='value', title=None, color=None, fi
     plt.show()
 
 
-def plot_dataframe_each_plot(df, xlabel='step', ylabel='value', color=None, figsize=(10, 4), title=None, save_path=None, save=False):
+def plot_dataframe_each_plot(df, xlabel='step', ylabel='value', color=None, figsize=(10, 4), title=None, save_path=None, save=False, ylim=None):
     """Plot each column of the given DataFrame individual graph.
 
     Args:

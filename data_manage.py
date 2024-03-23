@@ -68,7 +68,7 @@ def extract_column_from_df(df, tag_list):
     return extracted_df
 
 
-def df_info(df):
+def df_info(df, num=5):
     """주어진 DataFrame에 대한 기본적인 정보를 출력합니다.
 
     Args:
@@ -87,12 +87,14 @@ def df_info(df):
     print("\n✲Non-null Value Counts:")
     print(df.count())
     
-    print("\nDataFrame HEAD:")
-    print("-" * 50)
-    display(df.head())
-    print("DataFrame TAIL:")
-    print("-" * 50)
-    display(df.tail())
+    if num > 0:
+        print("\nDataFrame HEAD:")
+        print("-" * 50)
+        display(df.head(num))
+    else:
+        print("\nDataFrame TAIL:")
+        print("-" * 50)
+        display(df.tail(abs(num)))
 
 
 def revise_df(df, operation, column, value, prior_value=False):
@@ -191,7 +193,7 @@ def combine_columns_into_df(column_list, df_name_list, df_list):
     
     Args:
         columns (list of str): 데이터를 모을 column들의 이름.
-        column_names (list of str): 각 column에 대한 이름들.
+        column_names (list of st): 각 column에 대한 이름들.
         df_names (list of str): 각 DataFrame을 구분하기 위한 이름들.
         df_list (list of pd.DataFrame): 데이터를 가져올 여러 DataFrame들.
 
@@ -199,7 +201,6 @@ def combine_columns_into_df(column_list, df_name_list, df_list):
         pd.DataFrame: 모든 값이 모인 새로운 DataFrame.
     """
     combined_data = {}
-
     for col in column_list:
         for name, df in zip(df_name_list, df_list):
             new_name = f"{name}:{col}" 
