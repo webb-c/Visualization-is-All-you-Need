@@ -52,16 +52,13 @@ def parse_omnet_csv(df, type=None, node_list=None):
 def get_backlog_sum(df):
     new_data = {}
 
-    # 각 열의 이름을 ":"을 기준으로 분리하여 첫 번째 부분을 key로, 해당 열의 데이터를 value로 저장합니다.
     for column in df.columns:
         prefix = column.split(': ')[0]
         if prefix not in new_data:
             new_data[prefix] = df[column].copy()
         else:
-            #new_data[prefix] += df[column]
             new_data[prefix] = new_data[prefix].fillna(0) + df[column].fillna(0)
 
-    # 새로운 DataFrame을 생성합니다.
     new_df = pd.DataFrame(new_data, index=df.index)
     new_df = new_df.rename(columns={'node physical backlog': 'physical backlog', 'node virtual backlog': 'virtual backlog'})
     
@@ -69,17 +66,38 @@ def get_backlog_sum(df):
     return new_df
 
 
+def get_group_backlog_df(df):
+    prefix_list = []
+    new_data_list = {}
+
+    for column in df.columns:
+        prefix = column.split(': ')[0]
+        new_column = column.split(': ')[1]
+        if prefix not in prefix_list:
+            prefix_list.append(prefix)
+            new_data_list[prefix] = {}
+            new_data_list[prefix][new_column] = df[column].copy()
+        else:
+            new_data_list[prefix][new_column] = df[column].copy()
+
+    df_list = []
+    for data in new_data_list.values():
+        new_df = pd.DataFrame(data)
+        df_list.append(new_df)
+
+    return df_list
+
 def plot_reward(df, title=None, save=False, save_path=None):
     """train_log: reward plot"""
     new_df = dm.extract_column_from_df(df, ["Reward/all"]).rename(columns={"Reward/all":"reward"})
-    vis.plot_dataframe(new_df, ylabel="reward", title=title, save=save, save_path=save_path)
+    vis.plot_dataframe(new_df, ylabel="reward", title=title, save=save, save_path=save_path, figsize=(4, 3))
     
 
 def plot_comparison_reward(df_list, column_list, title=None, save=False, save_path=None):
     """train_log list: plot reward in same frame"""
     df_list = [ df.rename(columns={"Reward/all": "reward"}) for df in df_list ]
     combine_df = dm.combine_columns_into_df(["reward"], column_list, df_list)
-    vis.plot_dataframe(combine_df, ylabel="reward", title=title, save=save, save_path=save_path)
+    vis.plot_dataframe(combine_df, ylabel="reward", title=title, save=save, save_path=save_path, figsize=(4, 3), legend="lower right")
 
 
 def plot_frame_barcode(df, color="red", save=False, save_path=None):
@@ -141,6 +159,51 @@ def plot_comparison_diff(df_list, column_list, title=None, save=False, save_path
     df_list = [ df.rename( columns={"Network/Diff":"diff"}) for df in df_list ]
     combine_df = dm.combine_columns_into_df(["diff"], column_list, df_list)
     vis.plot_dataframe(combine_df, ylabel="frame", title=title, save=save, save_path=save_path, figsize= (6, 3), color=["mediumseagreen", "tomato"], ylim=ylim)
+
+
+def plot_each_backlog(backlog_df, save=False, save_path=None):
+    """omnet: 각 virtusl node OR virtual link OR physical node의 backlog 그래프들을 각각 따로 그림"""
+    save_path_list = [None, None, None]
+    if save_path is not None:
+        save_path_list[0] = save_path + "_physical"
+        save_path_list[0] = save_path + "_virtual_link"
+        save_path_list[0] = save_path + "_virtual_node"
+    
+    backlog_link_df, backlog_physical_df, backlog_node_df = lrlo.get_group_backlog_df(backlog_df)
+    vis.plot_dataframe_each_plot(backlog_physical_df, title="physical backlog", figsize=(5, 3), save=save, save_path=save_path)
+    vis.plot_dataframe_each_plot(backlog_link_df, title="virtual link backlog", figsize=(5, 3), save=save, save_path=save_path)
+    vis.plot_dataframe_each_plot(backlog_node_df, title="virtual node backlog", figsize=(5, 3), save=save, save_path=save_path)
+
+
+def plot_backlog(df, save=False, save_path=[None, None]):
+    """omnet: virtual backlog의 합 / physical node의 합 그래프를 따로 그림"""
+    virtual_df = dm.extract_column_from_df(df, ["virtual backlog"])
+    physical_df = dm.extract_column_from_df(df, ["physical backlog"])
+    vis.plot_dataframe(virtual_df, xlabel="time (s)", ylabel="backlog (B)", title="Virtual Backlog", save=save, save_path=save_path[0], figsize=(8, 4))
+    vis.plot_dataframe(physical_df, xlabel="time (s)", ylabel="backlog (B)", title="Physical Backlog", save=save, save_path=save_path[1], figsize=(8, 4))
+
+
+def plot_comparison_backlog(df_list, column_list=["masking", "unmasking"], save=False, save_path=[None, None]):
+    """omnet: virtual backlog의 합 / physical node의 합 그래프를 따로, 여러개의 그래프에 대해 하나의 plot에 비교해서 그림"""
+    df_list = [ df.rename(columns={"virtual backlog": "virtual", "physical backlog": "physical"}) for df in df_list ]
+    virtual_df = dm.combine_columns_into_df(["virtual"], column_list, df_list)
+    physical_df = dm.combine_columns_into_df(["physical"], column_list, df_list)
+    vis.plot_dataframe(virtual_df, xlabel="time (s)", ylabel="backlog (B)", title="Virtual Backlog", save=save, save_path=save_path[0], figsize=(8, 4), legend="lower right")
+    vis.plot_dataframe(physical_df, xlabel="time (s)", ylabel="backlog (B)", title="Physical Backlog", save=save, save_path=save_path[0], figsize=(8, 4), legend="lower right")
+
+
+def plot_each_latency(latency_df):
+    vis.plot_dataframe_each_plot(latency_df, title="latency", figsize=(8, 6), xlabel="time (s)", ylabel="time (s)")
+    """omnet: destination 노드별 layency 그래프를 그림"""
+    
+    
+def plot_each_comparison_latency(df_list, column_list=["masking", "unmasking"], save=False, save_path=[None, None, None]):
+    """omnet: virtual backlog의 합 / physical node의 합 그래프를 따로, 여러개의 그래프에 대해 하나의 plot에 비교해서 그림"""
+    columns = df_list[0].columns
+    for i, column in enumerate(columns):
+        df = dm.combine_columns_into_df([column], column_list, df_list)
+        vis.plot_dataframe(df, xlabel="time (s)", ylabel="backlog (B)", title="latency:"+column, save=save, save_path=save_path[i], figsize=(8, 4), legend="lower right", color=["royalblue", "tomato"])
+        
 
 
 def parse_routing_path(data):

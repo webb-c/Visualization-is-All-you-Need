@@ -29,7 +29,9 @@ def make_barcode(skip_list, num_frame, color='red', fps=30, save=False, save_pat
             squares[idx + i] = 0
         idx += 30
 
-    plt.figure(figsize=(num_frame / 30, 7))
+    unit = num_frame / 30
+    plt.figure(figsize=(unit, unit / 13))
+    
     for i in range(num_frame):
         if squares[i] == 1:
             plt.bar(i, 1, color=color)
@@ -44,7 +46,7 @@ def make_barcode(skip_list, num_frame, color='red', fps=30, save=False, save_pat
     plt.show()
 
 
-def plot_dataframe(df, xlabel='step', ylabel='value', title=None, color=None, figsize=(8, 6), save_path=None, save=False, ylim=None):
+def plot_dataframe(df, xlabel='step', ylabel='value', title=None, color=None, figsize=(8, 6), save_path=None, save=False, ylim=None, legend="upper right", inter=True):
     """Plot each column of the given DataFrame
     
     Args:
@@ -60,9 +62,15 @@ def plot_dataframe(df, xlabel='step', ylabel='value', title=None, color=None, fi
     for i, col in enumerate(df.columns):
         is_one += 1
         if color:
-            plt.plot(df.index, df[col], label=col, color=color[i % len(color)])
+            if inter:
+                plt.plot(df.index, df[col].interpolate(), label=col, color=color[i % len(color)])
+            else:
+                plt.plot(df.index, df[col], label=col, color=color[i % len(color)])
         else:
-            plt.plot(df.index, df[col], label=col)
+            if inter:
+                plt.plot(df.index, df[col].interpolate(), label=col)
+            else:
+                plt.plot(df.index, df[col], label=col)
     
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
@@ -70,7 +78,7 @@ def plot_dataframe(df, xlabel='step', ylabel='value', title=None, color=None, fi
     if ylim is not None:
         plt.ylim(ylim)
     if is_one > 1:
-        plt.legend(loc='upper right')
+        plt.legend(loc=legend)
     if title is not None:
         plt.title(title)
     
@@ -82,7 +90,7 @@ def plot_dataframe(df, xlabel='step', ylabel='value', title=None, color=None, fi
     plt.show()
 
 
-def plot_dataframe_each_plot(df, xlabel='step', ylabel='value', color=None, figsize=(10, 4), title=None, save_path=None, save=False, ylim=None):
+def plot_dataframe_each_plot(df, xlabel='step', ylabel='value', color=None, figsize=(10, 4), title=None, save_path=None, save=False, ylim=None, inter=True):
     """Plot each column of the given DataFrame individual graph.
 
     Args:
@@ -94,25 +102,40 @@ def plot_dataframe_each_plot(df, xlabel='step', ylabel='value', color=None, figs
         save (bool, optional): Whether to save the plot.
     """
     num_cols = len(df.columns)
-    fig, axes = plt.subplots(nrows=num_cols, sharex=True, figsize=(figsize[0], figsize[1]*num_cols))
+    unit = int(num_cols**0.5) + 1
+    fig, axes = plt.subplots(nrows=unit, ncols=unit, sharex=True, figsize=(figsize[0]*unit, figsize[1]*unit))
 
     for i, col in enumerate(df.columns):
+        row_idx = i // unit
+        col_idx = i % (unit)
+        
         if color:
-            axes[i].plot(df.index, df[col], label=col, color=color)
+            if inter:
+                axes[row_idx, col_idx].plot(df.index, df[col].interpolate(), label=col, color=color)
+            else:
+                axes[row_idx, col_idx].plot(df.index, df[col], label=col, color=color)
         else:
-            axes[i].plot(df.index, df[col], label=col)
-        axes[i].set_xlabel(xlabel)
-        axes[i].set_ylabel(ylabel)
+            if inter:
+                axes[row_idx, col_idx].plot(df.index, df[col].interpolate(), label=col)
+            else:
+                axes[row_idx, col_idx].plot(df.index, df[col], label=col)
+        
+        axes[row_idx, col_idx].set_xlabel(xlabel)
+        axes[row_idx, col_idx].set_ylabel(ylabel)
         if title is not None:
-            axes[i].set_title(f"{title} ({col})")
+            axes[row_idx, col_idx].set_title(f"{title} ({col})")
+    
+    for ax in axes.ravel():
+        if not ax.lines:
+            fig.delaxes(ax)
     
     plt.tight_layout()
-    
     if save:
         save_path += "_Each"
         save_plot(plt, save_path)
 
     plt.show()
+
 
 
 def plot_heatmap(data, name=None, show_minmax=False):
