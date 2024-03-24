@@ -169,7 +169,7 @@ def plot_each_backlog(backlog_df, save=False, save_path=None):
         save_path_list[0] = save_path + "_virtual_link"
         save_path_list[0] = save_path + "_virtual_node"
     
-    backlog_link_df, backlog_physical_df, backlog_node_df = lrlo.get_group_backlog_df(backlog_df)
+    backlog_link_df, backlog_physical_df, backlog_node_df = get_group_backlog_df(backlog_df)
     vis.plot_dataframe_each_plot(backlog_physical_df, title="physical backlog", figsize=(5, 3), save=save, save_path=save_path)
     vis.plot_dataframe_each_plot(backlog_link_df, title="virtual link backlog", figsize=(5, 3), save=save, save_path=save_path)
     vis.plot_dataframe_each_plot(backlog_node_df, title="virtual node backlog", figsize=(5, 3), save=save, save_path=save_path)
