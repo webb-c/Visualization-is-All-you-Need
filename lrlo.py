@@ -151,7 +151,7 @@ def plot_comparison_fraction(df_list, column_list, title=None, save=False, save_
 def plot_diff(df, title=None, save=False, save_path=None, ylim=None):
     """test_log: send frame, guided frame num 차이 시간별 변화를 그림"""
     new_df = dm.extract_column_from_df(df, ["Network/Diff"]).rename(columns={"Network/Diff":"diff"})
-    vis.plot_dataframe(new_df, ylabel="frame", title=title, save=save, save_path=save_path, figsize= (6, 3), color=["royalblue"])
+    vis.plot_dataframe(new_df, ylabel="frame", title=title, save=save, save_path=save_path, figsize= (6, 3), color="royalblue")
 
 
 def plot_comparison_diff(df_list, column_list, title=None, save=False, save_path=None, ylim=None):
@@ -188,12 +188,12 @@ def plot_comparison_backlog(df_list, column_list=["masking", "unmasking"], save=
     df_list = [ df.rename(columns={"virtual backlog": "virtual", "physical backlog": "physical"}) for df in df_list ]
     virtual_df = dm.combine_columns_into_df(["virtual"], column_list, df_list)
     physical_df = dm.combine_columns_into_df(["physical"], column_list, df_list)
-    vis.plot_dataframe(virtual_df, xlabel="time (s)", ylabel="backlog (B)", title="Virtual Backlog", save=save, save_path=save_path[0], figsize=(8, 4), legend="lower right")
-    vis.plot_dataframe(physical_df, xlabel="time (s)", ylabel="backlog (B)", title="Physical Backlog", save=save, save_path=save_path[0], figsize=(8, 4), legend="lower right")
+    vis.plot_dataframe(virtual_df, xlabel="time (s)", ylabel="backlog (B)", title="Virtual Backlog", save=save, save_path=save_path[0], figsize=(8, 4), legend="lower right", alpha=0.5, color=["royalblue", "tomato"])
+    vis.plot_dataframe(physical_df, xlabel="time (s)", ylabel="backlog (B)", title="Physical Backlog", save=save, save_path=save_path[0], figsize=(8, 4), legend="lower right", alpha=0.5, color=["royalblue", "tomato"])
 
 
 def plot_each_latency(latency_df):
-    vis.plot_dataframe_each_plot(latency_df, title="latency", figsize=(8, 6), xlabel="time (s)", ylabel="time (s)")
+    vis.plot_dataframe_each_plot(latency_df, title="latency", figsize=(8, 6), xlabel="time (s)", ylabel="time (s)", color="royalblue")
     """omnet: destination 노드별 layency 그래프를 그림"""
     
     
@@ -202,7 +202,7 @@ def plot_each_comparison_latency(df_list, column_list=["masking", "unmasking"], 
     columns = df_list[0].columns
     for i, column in enumerate(columns):
         df = dm.combine_columns_into_df([column], column_list, df_list)
-        vis.plot_dataframe(df, xlabel="time (s)", ylabel="backlog (B)", title="latency:"+column, save=save, save_path=save_path[i], figsize=(8, 4), legend="lower right", color=["royalblue", "tomato"])
+        vis.plot_dataframe(df, xlabel="time (s)", ylabel="time (s)", title="latency:"+column, save=save, save_path=save_path[i], figsize=(8, 4), legend="lower right", color=["royalblue", "tomato"])
         
 
 

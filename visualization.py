@@ -46,7 +46,7 @@ def make_barcode(skip_list, num_frame, color='red', fps=30, save=False, save_pat
     plt.show()
 
 
-def plot_dataframe(df, xlabel='step', ylabel='value', title=None, color=None, figsize=(8, 6), save_path=None, save=False, ylim=None, legend="upper right", inter=True):
+def plot_dataframe(df, xlabel='step', ylabel='value', title=None, color=None, figsize=(8, 6), save_path=None, save=False, ylim=None, legend="upper right", inter=True, alpha=1):
     """Plot each column of the given DataFrame
     
     Args:
@@ -63,14 +63,18 @@ def plot_dataframe(df, xlabel='step', ylabel='value', title=None, color=None, fi
         is_one += 1
         if color:
             if inter:
-                plt.plot(df.index, df[col].interpolate(), label=col, color=color[i % len(color)])
+                # 0 값을 NaN으로 대체한 후에 보간
+                interpolated_data = df[col].replace(0, np.nan).interpolate()
+                plt.plot(df.index, interpolated_data, label=col, color=color[i % len(color)], alpha=alpha)
             else:
-                plt.plot(df.index, df[col], label=col, color=color[i % len(color)])
+                plt.plot(df.index, df[col], label=col, color=color[i % len(color)], alpha=alpha)
         else:
             if inter:
-                plt.plot(df.index, df[col].interpolate(), label=col)
+                # 0 값을 NaN으로 대체한 후에 보간
+                interpolated_data = df[col].replace(0, np.nan).interpolate()
+                plt.plot(df.index, interpolated_data, label=col, alpha=alpha)
             else:
-                plt.plot(df.index, df[col], label=col)
+                plt.plot(df.index, df[col], label=col, alpha=alpha)
     
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
