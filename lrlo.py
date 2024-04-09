@@ -66,6 +66,47 @@ def get_backlog_sum(df):
     return new_df
 
 
+def get_backlog_avg(df):
+    new_data = {}
+    prefix_count = {}
+    
+    for column in df.columns:
+        prefix = column.split(': ')[0]
+        if prefix not in new_data:
+            new_data[prefix] = df[column].copy()
+            prefix_count[prefix] = 1
+        else:
+            new_data[prefix] = new_data[prefix].fillna(0) + df[column].fillna(0)
+            prefix_count[prefix] += 1
+
+    for key, value in new_data.items():
+        new_data[key] /= prefix_count[key]
+    
+    new_df = pd.DataFrame(new_data, index=df.index)
+    new_df = new_df.rename(columns={'node physical backlog': 'physical backlog', 'node virtual backlog': 'virtual backlog'})
+    
+    new_df = new_df[['virtual backlog', 'physical backlog']]
+    return new_df
+
+
+def get_latency_avg(df):
+    new_data = {}
+
+    for column in df.columns:
+        prefix = column.split(': ')[0]
+        if prefix not in new_data:
+            new_data[prefix] = df[column].copy()
+        else:
+            new_data[prefix] = new_data[prefix].fillna(0) + df[column].fillna(0)
+
+    for key, value in new_data.items():
+        new_data[key] /= len(df.columns)
+
+    new_df = pd.DataFrame(new_data)
+
+    return new_df
+
+
 def get_group_backlog_df(df):
     prefix_list = []
     new_data_list = {}
@@ -102,8 +143,8 @@ def plot_comparison_reward(df_list, column_list, title=None, save=False, save_pa
 
 def plot_frame_barcode(df, color="red", save=False, save_path=None):
     extracted_df =dm.extract_column_from_df(df, ["Network/send_a(t)"])
-    action_df = dm.revise_df(extracted_df, 'subtract', column="Network/send_a(t)", value=30, prior_value=True)
-    vis.make_barcode(action_df, len(action_df)*30, color=color, save=save, save_path=save_path)
+    action_df = dm.revise_df(extracted_df, 'subtract', column="Network/send_a(t)", value=5, prior_value=True)
+    vis.make_barcode(action_df, len(action_df)*6, color=color, save=save, save_path=save_path)
     
 
 def plot_send(df, title=None, save=False, save_path=None, ylim=(-1, 31)):
@@ -145,7 +186,7 @@ def plot_comparison_fraction(df_list, column_list, title=None, save=False, save_
     df_list = [ df.rename(columns={"Network/send_a(t)": "send"}) for df in df_list ]
     df_list = [ dm.revise_df(df, "divide", "send", 30) for df in df_list ]
     combine_df = dm.combine_columns_into_df(["send"], column_list, df_list)
-    vis.plot_dataframe(combine_df, ylabel="fraction", title=title, save=save, save_path=save_path, figsize= (6, 3), color=["mediumseagreen", "tomato"], ylim=ylim)
+    vis.plot_dataframe(combine_df, ylabel="fraction", title=title, save=save, save_path=save_path, figsize= (6, 3), color=["mediumseagreen", "tomato"], ylim=ylim, smoothing_window=smoothing_window)
 
 
 def plot_diff(df, title=None, save=False, save_path=None, ylim=None):
@@ -179,8 +220,8 @@ def plot_backlog(df, save=False, save_path=[None, None]):
     """omnet: virtual backlog의 합 / physical node의 합 그래프를 따로 그림"""
     virtual_df = dm.extract_column_from_df(df, ["virtual backlog"])
     physical_df = dm.extract_column_from_df(df, ["physical backlog"])
-    vis.plot_dataframe(virtual_df, xlabel="time (s)", ylabel="backlog (B)", title="Virtual Backlog", save=save, save_path=save_path[0], figsize=(8, 4))
-    vis.plot_dataframe(physical_df, xlabel="time (s)", ylabel="backlog (B)", title="Physical Backlog", save=save, save_path=save_path[1], figsize=(8, 4))
+    vis.plot_dataframe(virtual_df, xlabel="time (s)", ylabel="backlog (B)", title="Virtual Backlog", save=save, save_path=save_path[0], figsize=(7, 4))
+    vis.plot_dataframe(physical_df, xlabel="time (s)", ylabel="backlog (B)", title="Physical Backlog", save=save, save_path=save_path[1], figsize=(7, 4))
 
 
 def plot_comparison_backlog(df_list, column_list=["masking", "unmasking"], save=False, save_path=[None, None]):
@@ -188,12 +229,12 @@ def plot_comparison_backlog(df_list, column_list=["masking", "unmasking"], save=
     df_list = [ df.rename(columns={"virtual backlog": "virtual", "physical backlog": "physical"}) for df in df_list ]
     virtual_df = dm.combine_columns_into_df(["virtual"], column_list, df_list)
     physical_df = dm.combine_columns_into_df(["physical"], column_list, df_list)
-    vis.plot_dataframe(virtual_df, xlabel="time (s)", ylabel="backlog (B)", title="Virtual Backlog", save=save, save_path=save_path[0], figsize=(8, 4), legend="lower right", alpha=0.5, color=["royalblue", "tomato"])
-    vis.plot_dataframe(physical_df, xlabel="time (s)", ylabel="backlog (B)", title="Physical Backlog", save=save, save_path=save_path[0], figsize=(8, 4), legend="lower right", alpha=0.5, color=["royalblue", "tomato"])
+    vis.plot_dataframe(virtual_df, xlabel="time (s)", ylabel="backlog (B)", title="Virtual Backlog", save=save, save_path=save_path[0], figsize=(7, 4), legend="lower right", alpha=0.5, color=["royalblue", "tomato"])
+    vis.plot_dataframe(physical_df, xlabel="time (s)", ylabel="backlog (B)", title="Physical Backlog", save=save, save_path=save_path[0], figsize=(7, 4), legend="lower right", alpha=0.5, color=["royalblue", "tomato"])
 
 
 def plot_each_latency(latency_df):
-    vis.plot_dataframe_each_plot(latency_df, title="latency", figsize=(8, 6), xlabel="time (s)", ylabel="time (s)", color="royalblue")
+    vis.plot_dataframe_each_plot(latency_df, title="latency", figsize=(7, 4), xlabel="time (s)", ylabel="time (s)", color="royalblue")
     """omnet: destination 노드별 layency 그래프를 그림"""
     
     
@@ -202,7 +243,7 @@ def plot_each_comparison_latency(df_list, column_list=["masking", "unmasking"], 
     columns = df_list[0].columns
     for i, column in enumerate(columns):
         df = dm.combine_columns_into_df([column], column_list, df_list)
-        vis.plot_dataframe(df, xlabel="time (s)", ylabel="time (s)", title="latency:"+column, save=save, save_path=save_path[i], figsize=(8, 4), legend="lower right", color=["royalblue", "tomato"])
+        vis.plot_dataframe(df, xlabel="time (s)", ylabel="time (s)", title="latency:"+column, save=save, save_path=save_path[i], figsize=(7, 4), legend="lower right", color=["royalblue", "tomato"])
         
 
 

@@ -68,6 +68,23 @@ def extract_column_from_df(df, tag_list):
     return extracted_df
 
 
+def get_sampled_df(df, interval=1):
+    start_time = df.index.min()
+    end_time = df.index.max()
+
+    num_intervals = int(np.ceil(end_time - start_time))
+    interval_means = []
+    for i in range(num_intervals):
+        interval_start = start_time + i
+        interval_end = start_time + i + interval
+        interval_data = df[(df.index >= interval_start) & (df.index < interval_end)]
+        interval_mean = interval_data.mean()
+        interval_means.append(interval_mean)
+
+    sampled_df = pd.DataFrame(interval_means)
+    return sampled_df
+
+
 def df_info(df, num=5):
     """주어진 DataFrame에 대한 기본적인 정보를 출력합니다.
 
