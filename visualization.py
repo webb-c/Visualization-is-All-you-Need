@@ -12,7 +12,7 @@ def save_plot(plot, save_path):
         format (str): The format of the file to save the plot to (default: 'png').
     """
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
-    plt.savefig(save_path+'.png')
+    plt.savefig(save_path+'.pdf')
 
 
 def make_barcode(skip_list, num_frame, color='red', fps=30, save=False, save_path=None) :
